@@ -17,6 +17,7 @@
 #input{
     width :500px;
     height:50px;
+    text-align: center;
 }
 
 .loader {
@@ -34,18 +35,15 @@
   100% { transform: rotate(360deg); }
 }
 
-
-
 .modal-target{
     display: none;
-    position:absolute;
+    position:fixed;
     left:0;
     top:0;
     width : 100vw;
     height : 100vh;
     background-color: rgba(5, 25, 23, 0.9);
     overflow:hidden;
-
 }
 
 .modal-img{
