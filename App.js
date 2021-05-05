@@ -20,43 +20,36 @@ export function App(){
     }
 
     const SearchData = async(catKeyword) =>{
-        /* 
-        문제 발생 
-        - 검색창에서 데이터를 검색 할 때와 스크롤을 다 내려서 데이터를 받아 올 때 처리하는 방식이 달라야 하나?
-        - 스크롤을 다 내리는 경우에는 이전 내용을 유지한 채로 계속 데이터를 붙여가야 한다.
-        - 그렇지 않은 경우에는 새롭게 결과를 보여줘야 한다.
-        - tmpKeyword를 이용한 트릭을 사용하면 되지 않을까?
-        - tmpKeyword가 이전과 같지 않으면 . . .  
-        - 아 또 모달 열린 상태에서 
-        */
         $isLoadingTarget.classList.toggle("show") 
         tmpKeyword = catKeyword
-        let tmpState = []
-        await fetch(`https://api.thecatapi.com/v1/images/search?q=${catKeyword}&limit=10`)
-        .then(res =>{
-            if (res.ok){
-                return res.json()
+        try{
+            const preResponse = await fetch(`https://api.thecatapi.com/v1/images/search?q=${catKeyword}&limit=10`)
+            if (preResponse.ok && preResponse.status === 200){
+                const res = await preResponse.json()
+                
+                if(res.length === 0){
+                    alert("검색 결과가 존재하지 않습니다.")
+                }
+
+                $isLoadingTarget.classList.toggle("show")
+                this.setState(res)                
             }
-            throw new Error('network response was not ok')
-        }) // respoese 객체
-        .then(result => {
-            result.forEach(ele=>{
-                // 이렇게 하는거 쪼금 맘에 안 드는데
-                const {id,url} = ele
-                tmpState.push({id,url})
-            })
-        })
-        .catch(err => console.log(err)) 
-        $isLoadingTarget.classList.toggle("show")
-        this.setState(tmpState)
+
+
+        }catch(err){
+            console.log(err)
+        }        
     }
     
-    /* App 컴포넌트에서 여러곳으로 뿌리는 역할.*/
+    const AddData = async() =>{
+        const preRespnse = await fetch(`https://api.thecatapi.com/v1/images/search?q=${tmpKeyword}&limit=10`)
+        const res = await preRespnse.json() 
+        this.setState([...this.initialDataState,...res])
+    }
 
-    /* nextState는 새로운 array-like로 입력받는다.*/
+
     this.setState = (nextState) =>{
-        this.initialDataState = [...nextState]
-        console.log(this.initialDataState)
+        this.initialDataState = nextState
         this.SearchResult.setState(this.initialDataState)
         this.render()
     }
@@ -80,8 +73,7 @@ export function App(){
     $modalTarget.addEventListener("click",e=>{
         if(e.target===e.currentTarget){
             $mainTarget.style.overflow = "visible"
-            $modalTarget.classList.toggle("show")
-            
+            $modalTarget.classList.toggle("show")    
         }
     })
 
@@ -92,10 +84,10 @@ export function App(){
         }
     })
 
-    document.addEventListener("scroll",e=>{
+    document.addEventListener("scroll",async (e)=>{
         const { clientHeight, scrollTop, scrollHeight} = e.target.scrollingElement
         if (clientHeight + scrollTop >= scrollHeight){
-            alert("하이")
+            await AddData()
         }
     })
 
